@@ -6,3 +6,5 @@
 - [x] Adapt the workspace to a dark, industrial software factory.
 - [x] Add selectable web, API, data, terminal, and document preview renderers.
 - [x] Update agent guides and verify the adaptive preview workflows.
+- [x] Improve chat pacing, progressive responses, activity states, and follow-up suggestions.
+- [x] Add replayable multi-turn example data and verify send, stop, replay, and reduced motion.

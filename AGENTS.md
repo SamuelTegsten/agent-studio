@@ -41,3 +41,5 @@ use the editor.
 - Store app imagery through asset JSON pointers rather than external hotlinks; this keeps media in the project asset flow.
 
 - Define output kinds in a typed catalog and renderer registry, with matching per-kind source previews; this allows software artifacts beyond browser pages without coupling their UI state.
+
+- Keep simulated conversation timing and cancellation in `use-demo-conversation`, with typed scenarios in `chat-demo.ts`; one scheduler preserves partial output and prevents replay/send races.

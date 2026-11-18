@@ -25,7 +25,7 @@ The user selected one conversation with no persistence. State resets on refresh.
 
 Messages are `UIMessage[]`, rendered from `parts`. Text goes through `MessageResponse`; tools use `Tool`, default closed, inside assistant messages. User bubbles use a deliberate semantic background/foreground pair. Assistant messages are unfilled.
 
-Sending appends the user message immediately. A cancellable demo delay shows a shimmer, then adds an explicitly frontend-only reply. This delay is simulation, not an inference retry or timeout. Clear it on reset/unmount and never allow concurrent sends. Keep textarea focus after normal sending and stop, but not while a dialog owns focus.
+Sending appends the user message immediately. `use-demo-conversation` runs thinking, progressive text, and simulated tool phases using one cancellable timer. Stop preserves partial text and removes unfinished tool fixtures. Replay runs three typed sample turns, with a pause between checkpoints. Reduced motion reveals complete text without word animation. These delays are simulation, not inference retries or timeouts. Clear them on reset/unmount and never allow concurrent sends. Keep textarea focus after normal sending and stop, but not while a dialog owns focus.
 
 Attachments use AI Elements' validated local attachment context. They remain local to the session and are not uploaded or processed. Export creates a Markdown download. Clipboard and fullscreen actions catch browser restrictions. Preview refresh remounts the preview, not the page. Build/Plan changes only the demo response, not the project.
 

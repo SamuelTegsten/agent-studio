@@ -21,6 +21,8 @@ import {
   MoreHorizontal,
   MousePointer2,
   Paperclip,
+  Play,
+  Terminal,
   Plus,
   RotateCcw,
   Settings2,
@@ -80,7 +82,8 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BrandMark } from "./brand";
 import { ArtifactPreview, ArtifactSelector } from "./artifact-preview";
 import { artifacts, artifactCode, type ArtifactKind } from "@/lib/artifacts";
-import { demoReply, initialMessages } from "@/lib/chat-demo";
+import { toolTitles } from "@/lib/chat-demo";
+import { useDemoConversation } from "@/hooks/use-demo-conversation";
 
 function IconButton({
   label,
@@ -138,9 +141,10 @@ function AttachmentList() {
 }
 
 export function DevelopmentWorkspace() {
-  const [messages, setMessages] = useState<UIMessage[]>(initialMessages);
+  const chat = useDemoConversation();
+  const { messages, busy } = chat;
   const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
+
   const [mode, setMode] = useState<"build" | "plan">("build");
   const [view, setView] = useState<"preview" | "code">("preview");
   const [artifact, setArtifact] = useState<ArtifactKind>("web");
@@ -155,58 +159,17 @@ export function DevelopmentWorkspace() {
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [previewKey, setPreviewKey] = useState(0);
   const [notice, setNotice] = useState("");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const textarea = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [],
-  );
   useEffect(() => {
     if (!showPreview && !dialog && !busy) textarea.current?.focus();
   }, [showPreview, dialog, busy]);
-  function stop() {
-    if (timer.current) clearTimeout(timer.current);
-    setBusy(false);
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        parts: [{ type: "text", text: "Stopped. Your message is still in the conversation." }],
-      },
-    ]);
-  }
   function send(
     text: string,
     files: { type: "file"; mediaType: string; url: string; filename?: string }[],
   ) {
-    if (busy || (!text.trim() && !files.length)) return;
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        role: "user",
-        parts: [{ type: "text", text: text.trim() }, ...files],
-      },
-    ]);
-    setInput("");
-    setBusy(true);
-    timer.current = setTimeout(() => {
-      setMessages((current) => [
-        ...current,
-        {
-          id: crypto.randomUUID(),
-          role: "assistant",
-          parts: [
-            { type: "text", text: demoReply(text.trim() || "Review the attached files", mode) },
-          ],
-        },
-      ]);
-      setBusy(false);
-    }, 1400);
+    if (chat.send(text, files, mode)) setInput("");
   }
   async function copy(text: string, id: string) {
     try {
@@ -318,10 +281,13 @@ export function DevelopmentWorkspace() {
           <div className="panel-heading">
             <div className="flex items-center gap-2">
               <MessageSquare className="size-3.5 text-muted-foreground" />
-              <span className="text-xs font-semibold">Chat</span>
+              <span className="text-xs font-semibold">Agent</span>
               <span className="session-pill">Frontend demo</span>
             </div>
             <div className="flex gap-1">
+              <IconButton label="Replay example conversation" onClick={chat.replay}>
+                <Play />
+              </IconButton>
               <IconButton label="Reset conversation" onClick={() => setDialog("reset")}>
                 <Plus />
               </IconButton>
@@ -349,6 +315,27 @@ export function DevelopmentWorkspace() {
               </DropdownMenu>
             </div>
           </div>
+          <div className="chat-runbar">
+            <span className={busy ? "run-indicator running" : "run-indicator"} />
+            <span>
+              {chat.replaying
+                ? `EXAMPLE RUN / ${chat.replayStep} OF 3`
+                : busy
+                  ? "AGENT WORKING"
+                  : chat.completed
+                    ? "EXAMPLE COMPLETE"
+                    : "DISPATCH / DEVELOPMENT"}
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="ml-auto h-6 px-2 text-[10px]"
+              onClick={busy ? chat.stop : chat.replay}
+            >
+              {busy ? <Square className="size-3" /> : <Play className="size-3" />}
+              {busy ? "Stop" : chat.completed ? "Replay" : "Run example"}
+            </Button>
+          </div>
           <Conversation>
             <ConversationContent className="chat-content">
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
@@ -363,14 +350,32 @@ export function DevelopmentWorkspace() {
                       <BrandMark />
                       Forma
                       <span className="ml-auto text-[10px] font-normal text-muted-foreground">
-                        {message.id === "response" ? "10:42" : "Just now"}
+                        {message.id === chat.activeId ? "LIVE" : "SIMULATED"}
                       </span>
                     </div>
                   )}
                   <MessageContent>
                     {message.parts.map((part, index) => {
                       if (part.type === "text")
-                        return <MessageResponse key={index}>{part.text}</MessageResponse>;
+                        return (
+                          <MessageResponse
+                            key={index}
+                            isAnimating={
+                              message.id === chat.activeId &&
+                              chat.phase === "streaming" &&
+                              index === message.parts.length - 1
+                            }
+                            className={
+                              message.id === chat.activeId &&
+                              chat.phase === "streaming" &&
+                              index === message.parts.length - 1
+                                ? "streaming-response"
+                                : ""
+                            }
+                          >
+                            {part.text}
+                          </MessageResponse>
+                        );
                       if (part.type === "file")
                         return (
                           <div key={index} className="flex items-center gap-2 text-xs">
@@ -382,15 +387,11 @@ export function DevelopmentWorkspace() {
                         return (
                           <Tool key={part.toolCallId} defaultOpen={false} className="activity-tool">
                             <ToolHeader
-                              className="[&_.rounded-full]:hidden"
+                              className="tool-header"
                               type="dynamic-tool"
                               toolName={part.toolName}
                               state={part.state}
-                              title={
-                                part.toolName === "read-files"
-                                  ? "Read 2 project files"
-                                  : "Edited 2 files"
-                              }
+                              title={toolTitles[part.toolName] ?? part.toolName}
                             />
                             <ToolContent>
                               <ToolInput input={part.input} />
@@ -437,7 +438,7 @@ export function DevelopmentWorkspace() {
                       </div>
                     )}
                   </MessageContent>
-                  {message.role === "assistant" && (
+                  {message.role === "assistant" && message.id !== chat.activeId && (
                     <MessageActions className="mt-1 gap-0 text-muted-foreground">
                       <MessageAction
                         tooltip={copied === message.id ? "Copied" : "Copy response"}
@@ -472,52 +473,60 @@ export function DevelopmentWorkspace() {
                         <ThumbsDown />
                       </MessageAction>
                       <span className="ml-auto text-[9px] text-muted-foreground">
-                        {message.id === "response" ? "Sample run / 24s" : "Demo response"}
+                        {chat.stoppedIds.includes(message.id) ? "STOPPED" : "✓ COMPLETE"}
                       </span>
                     </MessageActions>
                   )}
                 </Message>
               ))}
               {busy && (
-                <Message from="assistant">
-                  <div className="agent-label">
-                    <BrandMark />
-                    Forma
-                  </div>
-                  <MessageContent>
-                    <Shimmer>Considering your request…</Shimmer>
-                  </MessageContent>
-                </Message>
+                <div className="generation-status" role="status">
+                  <span className="run-indicator running" />
+                  <Shimmer>
+                    {chat.phase === "working"
+                      ? "Inspecting local fixtures…"
+                      : chat.phase === "streaming"
+                        ? "Composing response…"
+                        : chat.replaying && chat.phase === "idle"
+                          ? "Next checkpoint…"
+                          : "Tracing the next step…"}
+                  </Shimmer>
+                </div>
+              )}
+              {!busy && chat.recommendedArtifact && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="artifact-followup"
+                  onClick={() => {
+                    if (chat.recommendedArtifact) setArtifact(chat.recommendedArtifact);
+                    setView("preview");
+                    setShowPreview(true);
+                  }}
+                >
+                  <Terminal className="size-3.5" />
+                  Inspect {chat.recommendedArtifact} output
+                  <ArrowUpRight className="ml-auto size-3.5" />
+                </Button>
               )}
             </ConversationContent>
             <ConversationScrollButton aria-label="Scroll to latest message" />
           </Conversation>
           <div className="composer-wrap">
-            <div className="mb-3 flex gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 px-2 text-[10px] font-normal"
-                onClick={() => {
-                  setInput("Review the service boundaries");
-                  textarea.current?.focus();
-                }}
-              >
-                <MousePointer2 className="size-3" />
-                Review architecture
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 px-2 text-[10px] font-normal"
-                onClick={() => {
-                  setInput("Add a queue worker health check");
-                  textarea.current?.focus();
-                }}
-              >
-                <Plus className="size-3" />
-                Add a service
-              </Button>
+            <div className="chat-suggestions">
+              {chat.suggestions.slice(0, 2).map((suggestion) => (
+                <Button
+                  key={suggestion}
+                  variant="outline"
+                  size="sm"
+                  disabled={busy}
+                  onClick={() => send(suggestion, [])}
+                  className="suggestion-button"
+                >
+                  <ArrowUpRight className="size-3" />
+                  {suggestion}
+                </Button>
+              ))}
             </div>
             <PromptInput
               className="composer"
@@ -530,7 +539,9 @@ export function DevelopmentWorkspace() {
                 ref={textarea}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="What would you like to change?"
+                placeholder={
+                  busy ? "Draft your next instruction…" : "Give the factory its next instruction…"
+                }
                 aria-label="Message Forma"
               />
               <PromptInputFooter>
@@ -573,7 +584,7 @@ export function DevelopmentWorkspace() {
                 <PromptInputSubmit
                   status={busy ? "streaming" : "ready"}
                   disabled={!busy && !input.trim()}
-                  onStop={stop}
+                  onStop={chat.stop}
                   className="rounded-md"
                   title={busy ? "Stop" : "Send message"}
                 >
@@ -838,9 +849,7 @@ export function DevelopmentWorkspace() {
                 </Button>
                 <Button
                   onClick={() => {
-                    if (timer.current) clearTimeout(timer.current);
-                    setMessages(initialMessages);
-                    setBusy(false);
+                    chat.reset();
                     setInput("");
                     setFeedback({});
                     setDialog(null);

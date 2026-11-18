@@ -878,3 +878,129 @@
     flex-wrap: wrap;
   }
 }
+
+.chat-runbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 5px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted-foreground);
+}
+.run-indicator {
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  background: var(--success);
+  border-radius: 1px;
+}
+.run-indicator.running {
+  background: var(--primary);
+  animation: run-pulse 1.2s ease-in-out infinite;
+}
+.chat-content {
+  gap: 24px;
+}
+.chat-message.is-assistant > div {
+  line-height: 1.85;
+}
+.chat-message [data-streamdown="heading-3"] {
+  font-size: 13px;
+  font-weight: 600;
+}
+.chat-message.is-assistant > div.agent-label {
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 3px;
+}
+.chat-message .agent-label > span:last-child {
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+.chat-message .activity-tool {
+  margin-block: 5px;
+  border-left: 2px solid var(--border);
+}
+.activity-tool > button .rounded-full {
+  display: inline-flex;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-size: 0;
+}
+.activity-tool > button .rounded-full svg {
+  width: 12px;
+  height: 12px;
+}
+.activity-tool > button > div {
+  flex: 1;
+}
+.activity-tool > button .rounded-full {
+  margin-left: auto;
+}
+.activity-tool[data-state="open"] {
+  border-left-color: var(--primary);
+}
+.generation-status {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 11px;
+  min-height: 24px;
+  color: var(--muted-foreground);
+}
+.streaming-response > :last-child::after {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 13px;
+  background: var(--primary);
+  margin-left: 4px;
+  vertical-align: middle;
+  animation: cursor-blink 1s steps(2) infinite;
+}
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.suggestion-button {
+  height: auto;
+  min-height: 28px;
+  padding: 5px 8px;
+  font-size: 10px;
+  white-space: normal;
+  text-align: left;
+  flex: 1;
+  justify-content: flex-start;
+}
+.artifact-followup {
+  justify-content: flex-start;
+  font-size: 11px;
+  color: var(--primary);
+}
+.composer textarea {
+  min-height: 78px;
+  line-height: 1.7;
+}
+@keyframes run-pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+@keyframes cursor-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .run-indicator.running,
+  .streaming-response > :last-child::after {
+    animation: none;
+  }
+}
