@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -27,4 +28,16 @@ use the editor.
   `LOVABLE_API_KEY`. When Lovable does not provide one, users can bring their
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
+
 <!-- LOVABLE:END -->
+
+## Project architecture
+
+- Keep the application frontend-only with ephemeral single-conversation state; this preserves the requested scope and refresh behavior.
+- Compose the workspace in `src/components/workspace` and keep demo messages/replies in `src/lib/chat-demo.ts`; separating simulation from presentation makes the lack of inference explicit.
+- Use installed AI Elements for transcript, message Markdown, composer, and tool disclosures; this preserves accessible, SDK-compatible chat foundations.
+- Keep all visual design in `src/styles.css` through semantic OKLCH tokens; one design source keeps workspace and preview styling consistent.
+- Use TanStack file routes and leaf head metadata, with the workspace on `/`; this preserves the platform router and usable entry page.
+- Store app imagery through asset JSON pointers rather than external hotlinks; this keeps media in the project asset flow.
+
+- Define output kinds in a typed catalog and renderer registry, with matching per-kind source previews; this allows software artifacts beyond browser pages without coupling their UI state.
