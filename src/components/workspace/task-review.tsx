@@ -139,6 +139,84 @@ export function TaskReview({
           </Button>
         </nav>
         <div className={`review-body review-show-${mobilePanel}`}>
+          <section className="review-chat" aria-label="Review conversation">
+            <header>
+              <MessageSquare />
+              <h3>Review with Forma</h3>
+              <span className="session-pill">SIMULATED</span>
+            </header>
+            <Conversation className="min-h-0 flex-1">
+              <ConversationContent className="review-chat-content">
+                {chat.messages.map((message) => (
+                  <Message
+                    key={message.id}
+                    from={message.role}
+                    className={`chat-message ${message.role === "user" ? "is-user" : "is-assistant"}`}
+                  >
+                    <MessageContent>
+                      {message.parts.map((part, index) =>
+                        part.type === "text" ? (
+                          <MessageResponse
+                            key={index}
+                            className={message.id === chat.activeId ? "streaming-response" : ""}
+                          >
+                            {part.text}
+                          </MessageResponse>
+                        ) : null,
+                      )}
+                    </MessageContent>
+                  </Message>
+                ))}
+                {chat.phase === "thinking" && <Shimmer>Reviewing your request…</Shimmer>}
+              </ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+            <div className="review-composer">
+              <div className="chat-suggestions">
+                {!merged &&
+                  chat.suggestions.map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      className="suggestion-button"
+                      disabled={busy}
+                      onClick={() => send(suggestion)}
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
+              </div>
+              <PromptInput onSubmit={({ text }) => send(text)} className="composer">
+                <PromptInputTextarea
+                  aria-label="Review message"
+                  placeholder={
+                    merged
+                      ? "This sample revision is merged"
+                      : "Ask a question or request a change…"
+                  }
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  disabled={merged || busy}
+                />
+                <PromptInputFooter>
+                  <span className="review-composer-label">REVISION {state.revision} / LOCAL</span>
+                  <PromptInputSubmit
+                    aria-label={chat.busy ? "Stop review response" : "Send review message"}
+                    status={chat.busy ? "streaming" : "ready"}
+                    disabled={merged || (!chat.busy && !input.trim())}
+                    onClick={
+                      chat.busy
+                        ? (event) => {
+                            event.preventDefault();
+                            chat.stop();
+                          }
+                        : undefined
+                    }
+                  />
+                </PromptInputFooter>
+              </PromptInput>
+            </div>
+          </section>
           <section className="review-report" aria-label="Change report">
             <div className="review-tabs" role="tablist" aria-label="Review views">
               <Button
@@ -318,84 +396,6 @@ export function TaskReview({
                   ))}
                 </div>
               )}
-            </div>
-          </section>
-          <section className="review-chat" aria-label="Review conversation">
-            <header>
-              <MessageSquare />
-              <h3>Review with Forma</h3>
-              <span className="session-pill">SIMULATED</span>
-            </header>
-            <Conversation className="min-h-0 flex-1">
-              <ConversationContent className="review-chat-content">
-                {chat.messages.map((message) => (
-                  <Message
-                    key={message.id}
-                    from={message.role}
-                    className={`chat-message ${message.role === "user" ? "is-user" : "is-assistant"}`}
-                  >
-                    <MessageContent>
-                      {message.parts.map((part, index) =>
-                        part.type === "text" ? (
-                          <MessageResponse
-                            key={index}
-                            className={message.id === chat.activeId ? "streaming-response" : ""}
-                          >
-                            {part.text}
-                          </MessageResponse>
-                        ) : null,
-                      )}
-                    </MessageContent>
-                  </Message>
-                ))}
-                {chat.phase === "thinking" && <Shimmer>Reviewing your request…</Shimmer>}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-            <div className="review-composer">
-              <div className="chat-suggestions">
-                {!merged &&
-                  chat.suggestions.map((suggestion) => (
-                    <Button
-                      key={suggestion}
-                      variant="outline"
-                      className="suggestion-button"
-                      disabled={busy}
-                      onClick={() => send(suggestion)}
-                    >
-                      {suggestion}
-                    </Button>
-                  ))}
-              </div>
-              <PromptInput onSubmit={({ text }) => send(text)} className="composer">
-                <PromptInputTextarea
-                  aria-label="Review message"
-                  placeholder={
-                    merged
-                      ? "This sample revision is merged"
-                      : "Ask a question or request a change…"
-                  }
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
-                  disabled={merged || busy}
-                />
-                <PromptInputFooter>
-                  <span className="review-composer-label">REVISION {state.revision} / LOCAL</span>
-                  <PromptInputSubmit
-                    aria-label={chat.busy ? "Stop review response" : "Send review message"}
-                    status={chat.busy ? "streaming" : "ready"}
-                    disabled={merged || (!chat.busy && !input.trim())}
-                    onClick={
-                      chat.busy
-                        ? (event) => {
-                            event.preventDefault();
-                            chat.stop();
-                          }
-                        : undefined
-                    }
-                  />
-                </PromptInputFooter>
-              </PromptInput>
             </div>
           </section>
         </div>
