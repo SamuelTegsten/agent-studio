@@ -8,15 +8,17 @@ export type Participant = {
   focus: string;
 };
 
+const localUser: Participant = { id: "you", name: "You", initials: "YO", role: "Developer", hue: 110, focus: "Chat" };
+
 export const participants: Participant[] = [
-  { id: "you", name: "You", initials: "YO", role: "Developer", hue: 110, focus: "Chat" },
+  localUser,
   { id: "mira", name: "Mira Holm", initials: "MH", role: "Backend lead", hue: 200, focus: "database/schema.sql" },
   { id: "jonas", name: "Jonas Ek", initials: "JE", role: "Frontend", hue: 30, focus: "Frontend preview" },
   { id: "sara", name: "Sara Lind", initials: "SL", role: "Reviewer", hue: 320, focus: "Review gate" },
 ];
 
 export function participant(id: string): Participant {
-  return participants.find((p) => p.id === id) ?? participants[0];
+  return participants.find((p) => p.id === id) ?? localUser;
 }
 
 /** Only the driver may send instructions to the agent; everyone else can draft. */

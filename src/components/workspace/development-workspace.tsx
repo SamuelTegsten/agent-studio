@@ -185,7 +185,7 @@ export function DevelopmentWorkspace() {
       let replayIndex = 0;
       for (const m of messages) {
         if (m.role !== "user") continue;
-        const fallback = chat.replaying ? replayCast[replayIndex % 3] : actorRef.current;
+        const fallback = (chat.replaying ? replayCast[replayIndex % 3] : undefined) ?? actorRef.current;
         replayIndex++;
         if (!next[m.id]) next = { ...next, [m.id]: fallback };
       }
@@ -197,7 +197,7 @@ export function DevelopmentWorkspace() {
     let i = 0;
     const timer = window.setInterval(() => {
       i++;
-      setTyping(i % 3 === 0 ? null : others[i % others.length]);
+      setTyping(i % 3 === 0 ? null : others[i % others.length] ?? null);
     }, 4200);
     return () => window.clearInterval(timer);
   }, [actor]);
@@ -362,10 +362,10 @@ export function DevelopmentWorkspace() {
                     </div>
                   )}
                   <MessageContent>
-                  {message.role === "user" && authors[message.id] && (
+                  {message.role === "user" && authors[message.id] !== undefined && (
                     <div className="author-label">
-                      <Avatar id={authors[message.id]} size="sm" />
-                      {participant(authors[message.id]).name}
+                      <Avatar id={authors[message.id] ?? "you"} size="sm" />
+                      {participant(authors[message.id] ?? "you").name}
                     </div>
                   )}
                     {message.parts.map((part, index) => {
@@ -557,9 +557,9 @@ export function DevelopmentWorkspace() {
                     variant="outline"
                     className="ml-auto h-6 px-2 text-[10px]"
                     disabled={busy}
-                    onClick={() => takeControl(requests[0])}
+                    onClick={() => takeControl(requests[0] ?? actor)}
                   >
-                    Hand to {participant(requests[0]).name.split(" ")[0]}
+                    Hand to {participant(requests[0] ?? actor).name.split(" ")[0]}
                   </Button>
                 )
               ) : requests.includes(actor) ? (
