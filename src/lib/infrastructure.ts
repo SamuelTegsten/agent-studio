@@ -1,10 +1,12 @@
 import { diffLines } from "diff";
 import { artifactCode, type ArtifactKind } from "./artifacts";
 
-export type PreviewSection = "infrastructure" | "frontend";
+export type PreviewSection = "infrastructure" | "qa" | "topology" | "frontend";
 export const projectCapabilities = { hasFrontend: true };
 export function availableSections(hasFrontend: boolean): PreviewSection[] {
-  return hasFrontend ? ["infrastructure", "frontend"] : ["infrastructure"];
+  return hasFrontend
+    ? ["infrastructure", "qa", "topology", "frontend"]
+    : ["infrastructure", "qa", "topology"];
 }
 export const infrastructureFiles = [
   { kind: "api", path: "services/jobs.openapi.json", label: "Jobs API" },

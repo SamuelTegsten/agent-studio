@@ -10,11 +10,11 @@ import {
 } from "@/lib/infrastructure";
 import { artifactCode } from "@/lib/artifacts";
 describe("infrastructure preview", () => {
-  it("defaults to infrastructure with a frontend section for UI projects", () => {
-    expect(availableSections(true)).toEqual(["infrastructure", "frontend"]);
+  it("defaults to infrastructure with QA, topology, and a frontend section for UI projects", () => {
+    expect(availableSections(true)).toEqual(["infrastructure", "qa", "topology", "frontend"]);
   });
-  it("omits frontend for projects without UI", () => {
-    expect(availableSections(false)).toEqual(["infrastructure"]);
+  it("omits frontend for projects without UI while retaining system inspectors", () => {
+    expect(availableSections(false)).toEqual(["infrastructure", "qa", "topology"]);
   });
   it("reconstructs both revisions from highlighted changes", () => {
     const diff = fileDiff("data");

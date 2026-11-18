@@ -12,6 +12,7 @@ import {
   Copy,
   ExternalLink,
   Files,
+  FlaskConical,
   GitBranch,
   LayoutPanelLeft,
   LockKeyhole,
@@ -20,6 +21,7 @@ import {
   Monitor,
   MoreHorizontal,
   MousePointer2,
+  Network,
   Paperclip,
   Play,
   Terminal,
@@ -81,6 +83,8 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BrandMark } from "./brand";
 import { ArtifactPreview } from "./artifact-preview";
 import { InfrastructurePreview } from "./infrastructure-preview";
+import { VerificationPreview } from "./verification-preview";
+import { TopologyPreview } from "./topology-preview";
 import { TaskReview } from "./task-review";
 import { availableSections, projectCapabilities, type PreviewSection } from "@/lib/infrastructure";
 import { type ArtifactKind } from "@/lib/artifacts";
@@ -185,7 +189,8 @@ export function DevelopmentWorkspace() {
       let replayIndex = 0;
       for (const m of messages) {
         if (m.role !== "user") continue;
-        const fallback = (chat.replaying ? replayCast[replayIndex % 3] : undefined) ?? actorRef.current;
+        const fallback =
+          (chat.replaying ? replayCast[replayIndex % 3] : undefined) ?? actorRef.current;
         replayIndex++;
         if (!next[m.id]) next = { ...next, [m.id]: fallback };
       }
@@ -197,7 +202,7 @@ export function DevelopmentWorkspace() {
     let i = 0;
     const timer = window.setInterval(() => {
       i++;
-      setTyping(i % 3 === 0 ? null : others[i % others.length] ?? null);
+      setTyping(i % 3 === 0 ? null : (others[i % others.length] ?? null));
     }, 4200);
     return () => window.clearInterval(timer);
   }, [actor]);
@@ -362,12 +367,12 @@ export function DevelopmentWorkspace() {
                     </div>
                   )}
                   <MessageContent>
-                  {message.role === "user" && authors[message.id] !== undefined && (
-                    <div className="author-label">
-                      <Avatar id={authors[message.id] ?? "you"} size="sm" />
-                      {participant(authors[message.id] ?? "you").name}
-                    </div>
-                  )}
+                    {message.role === "user" && authors[message.id] !== undefined && (
+                      <div className="author-label">
+                        <Avatar id={authors[message.id] ?? "you"} size="sm" />
+                        {participant(authors[message.id] ?? "you").name}
+                      </div>
+                    )}
                     {message.parts.map((part, index) => {
                       if (part.type === "text")
                         return (
@@ -709,10 +714,20 @@ export function DevelopmentWorkspace() {
                 >
                   {section === "infrastructure" ? (
                     <Code2 className="size-3.5" />
+                  ) : section === "qa" ? (
+                    <FlaskConical className="size-3.5" />
+                  ) : section === "topology" ? (
+                    <Network className="size-3.5" />
                   ) : (
                     <Monitor className="size-3.5" />
                   )}
-                  {section === "infrastructure" ? "Infrastructure" : "Frontend"}
+                  {section === "infrastructure"
+                    ? "Infrastructure"
+                    : section === "qa"
+                      ? "QA"
+                      : section === "topology"
+                        ? "Topology"
+                        : "Frontend"}
                 </Button>
               ))}
             </div>
@@ -756,6 +771,15 @@ export function DevelopmentWorkspace() {
           >
             {view === "infrastructure" ? (
               <InfrastructurePreview artifact={artifact} onSelect={setArtifact} />
+            ) : view === "qa" ? (
+              <VerificationPreview onReview={() => setReviewOpen(true)} />
+            ) : view === "topology" ? (
+              <TopologyPreview
+                onInspect={(kind) => {
+                  setArtifact(kind);
+                  setView("infrastructure");
+                }}
+              />
             ) : (
               <>
                 <div className="browser-bar">
@@ -784,7 +808,11 @@ export function DevelopmentWorkspace() {
               <span className="status-dot" />
               {view === "infrastructure"
                 ? "INFRASTRUCTURE / SAMPLE CHANGES"
-                : "FRONTEND / LOCAL PREVIEW"}
+                : view === "qa"
+                  ? "QUALITY GATE / SIMULATED TEST RUN"
+                  : view === "topology"
+                    ? "SYSTEM MAP / LOCAL FIXTURES"
+                    : "FRONTEND / LOCAL PREVIEW"}
             </span>
             <span className="flex items-center gap-1.5">
               <GitBranch className="size-3" />
@@ -801,11 +829,10 @@ export function DevelopmentWorkspace() {
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>
-                Reset this conversation?
-              </DialogTitle>
+              <DialogTitle>Reset this conversation?</DialogTitle>
               <DialogDescription>
-                Your session messages will be removed. The original sample conversation will be restored.
+                Your session messages will be removed. The original sample conversation will be
+                restored.
               </DialogDescription>
             </DialogHeader>
             {dialog === "reset" && (

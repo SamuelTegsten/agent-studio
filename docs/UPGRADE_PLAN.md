@@ -4,15 +4,15 @@ This project is a frontend-only, embeddable agentic-development workspace: a cha
 
 ## 1. What to import
 
-| Keep | Path | Purpose |
-| --- | --- | --- |
-| Workspace | `src/components/workspace/development-workspace.tsx` | Chat + preview layout (root component `DevelopmentWorkspace`) |
-| Preview | `src/components/workspace/infrastructure-preview.tsx`, `artifact-preview.tsx`, `studio-preview.tsx` | Infrastructure diff tree, Frontend renderer, other output kinds |
-| Review | `src/components/workspace/task-review.tsx`, `src/lib/task-review.ts` | Review window, revision model, simulated merge |
-| Demo logic | `src/hooks/use-demo-conversation.ts`, `src/lib/chat-demo.ts`, `src/lib/infrastructure.ts`, `src/lib/artifacts.ts` | Simulated conversation, fixtures, diffs |
-| UI kit | `src/components/ai-elements/*`, `src/components/ui/*` | AI Elements + shadcn primitives |
-| Styles | `src/styles.css` | All tokens, layout and motion |
-| Tests | `src/test/*` | Behavior tests to keep green |
+| Keep       | Path                                                                                                                                                                | Purpose                                                                                  |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Workspace  | `src/components/workspace/development-workspace.tsx`                                                                                                                | Chat + preview layout (root component `DevelopmentWorkspace`)                            |
+| Preview    | `src/components/workspace/infrastructure-preview.tsx`, `verification-preview.tsx`, `topology-preview.tsx`, `artifact-preview.tsx`, `studio-preview.tsx`             | Infrastructure diff tree, QA runner, system graph, Frontend renderer, other output kinds |
+| Review     | `src/components/workspace/task-review.tsx`, `src/lib/task-review.ts`                                                                                                | Review window, revision model, simulated merge                                           |
+| Demo logic | `src/hooks/use-demo-conversation.ts`, `src/lib/chat-demo.ts`, `src/lib/infrastructure.ts`, `src/lib/verification.ts`, `src/lib/topology.ts`, `src/lib/artifacts.ts` | Simulated conversation, fixtures, diffs, QA runs, architecture graph                     |
+| UI kit     | `src/components/ai-elements/*`, `src/components/ui/*`                                                                                                               | AI Elements + shadcn primitives                                                          |
+| Styles     | `src/styles.css`                                                                                                                                                    | All tokens, layout and motion                                                            |
+| Tests      | `src/test/*`                                                                                                                                                        | Behavior tests to keep green                                                             |
 
 Do not import `src/routes/*` as-is; mount `<DevelopmentWorkspace />` in a host route instead.
 
@@ -30,9 +30,11 @@ Do not import `src/routes/*` as-is; mount `<DevelopmentWorkspace />` in a host r
 1. **Conversation:** swap `use-demo-conversation` for the AI SDK `useChat` hook; messages already use the `UIMessage` shape, so `MessageResponse` and tool parts render unchanged. Keep the stop/cancel and phase states.
 2. **Tools:** map real tool calls to the existing `Tool` disclosure states (`input-available`, `output-available`, `output-error`).
 3. **Infrastructure:** replace fixtures in `src/lib/infrastructure.ts` with the host's file manifest and before/after contents; `fileDiff()` and `diffStats()` work on any strings.
-4. **Frontend preview:** replace the web artifact renderer with an iframe of the real preview URL, keeping device controls.
-5. **Review & merge:** back `src/lib/task-review.ts` with real revisions; wire "Merge into master" to the host's Git/PR service. Keep approval bound to the latest revision.
-6. Remove the "simulated" labels only once each surface is backed by real data.
+4. **QA:** replace `src/lib/verification.ts` fixtures with real test manifests and streaming runner results. Preserve suite filters, stop/skipped states, expected/actual failure output, and revision identity; never report a pass until the runner confirms it.
+5. **Topology:** derive `src/lib/topology.ts` from the host's service manifest and architecture document. Keep node/edge identifiers stable, surface undocumented connections as drift, and link nodes to real files only when they exist.
+6. **Frontend preview:** replace the web artifact renderer with an iframe of the real preview URL, keeping device controls.
+7. **Review & merge:** back `src/lib/task-review.ts` with real revisions; wire "Merge into master" to the host's Git/PR service. Keep approval bound to the latest revision.
+8. Remove the "simulated" labels only once each surface is backed by real data.
 
 ## 4. Visual polish backlog (no new features)
 
@@ -47,4 +49,5 @@ Do not import `src/routes/*` as-is; mount `<DevelopmentWorkspace />` in a host r
 - Tokens only in `src/styles.css`; no hardcoded colors in components.
 - Tool disclosures start collapsed; reduced-motion respected.
 - Never execute user terminal input on a host; never claim a merge happened without a real backend.
+- Never present fixture QA results as executed tests or fixture topology as discovered infrastructure.
 - Mobile (<760px) shows one panel at a time with the in-panel toggle buttons.

@@ -49,3 +49,4 @@ use the editor.
 - Keep task reviews in an ephemeral revision model with an independent AI Elements conversation using the shared demo scheduler; approval applies only to the latest revision and merge is explicitly simulated, preventing real repository claims.
 - Ship the workspace as an embeddable chat + preview surface without app navigation chrome; host projects own navigation, see docs/UPGRADE_PLAN.md.
 - Ship shared-session presence and single-driver control as local fixtures in src/lib/collaboration.ts; one driver per agent run prevents conflicting instructions, and nothing is synced.
+- Keep QA execution and system topology in deterministic fixture models with explicit simulation labels; this provides trust and architecture inspection without claiming tests ran or services were discovered.

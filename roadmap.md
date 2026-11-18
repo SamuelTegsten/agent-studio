@@ -15,3 +15,6 @@
 - [x] Add a task review window with visual explanation, change graphs, and all file diffs.
 - [x] Add review chat, local sample alterations, and revision-aware demo merge into master.
 - [x] Verify review, follow-up changes, merge confirmation, and phone layout; update implementation guides.
+- [x] Add a simulated QA runner with suite filters, progress, counters, and failure diffs.
+- [x] Add an interactive system topology with revision highlights and architecture drift signals.
+- [x] Verify both inspection views on desktop and mobile; update implementation guides.
