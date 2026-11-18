@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { canInstruct, handOff, participant, participants } from "@/lib/collaboration";
 import type { UIMessage } from "ai";
 import {
   ArrowDownToLine,
@@ -141,6 +142,19 @@ function AttachmentList() {
   );
 }
 
+function Avatar({ id, size = "md" }: { id: string; size?: "sm" | "md" }) {
+  const person = participant(id);
+  return (
+    <span
+      className={`presence-avatar ${size === "sm" ? "presence-avatar-sm" : ""}`}
+      style={{ "--avatar-hue": person.hue } as CSSProperties}
+      title={`${person.name} · ${person.role}`}
+    >
+      {person.initials}
+    </span>
+  );
+}
+
 export function DevelopmentWorkspace() {
   const chat = useDemoConversation();
   const { messages, busy } = chat;
@@ -157,6 +171,47 @@ export function DevelopmentWorkspace() {
   const [previewKey, setPreviewKey] = useState(0);
   const [notice, setNotice] = useState("");
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [actor, setActor] = useState("you");
+  const [driver, setDriver] = useState("you");
+  const [authors, setAuthors] = useState<Record<string, string>>({});
+  const [typing, setTyping] = useState<string | null>(null);
+  const [requests, setRequests] = useState<string[]>([]);
+  const actorRef = useRef(actor);
+  actorRef.current = actor;
+  useEffect(() => {
+    const replayCast = ["mira", "jonas", "sara"];
+    setAuthors((current) => {
+      let next = current;
+      let replayIndex = 0;
+      for (const m of messages) {
+        if (m.role !== "user") continue;
+        const fallback = chat.replaying ? replayCast[replayIndex % 3] : actorRef.current;
+        replayIndex++;
+        if (!next[m.id]) next = { ...next, [m.id]: fallback };
+      }
+      return next;
+    });
+  }, [messages, chat.replaying]);
+  useEffect(() => {
+    const others = participants.filter((p) => p.id !== actor).map((p) => p.id);
+    let i = 0;
+    const timer = window.setInterval(() => {
+      i++;
+      setTyping(i % 3 === 0 ? null : others[i % others.length]);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [actor]);
+  const isDriver = actor === driver;
+  function takeControl(to: string) {
+    const next = handOff(driver, to, busy);
+    if (next === driver) {
+      setNotice("Control can change hands once the agent finishes this run.");
+      return;
+    }
+    setDriver(next);
+    setRequests((r) => r.filter((id) => id !== to));
+    setNotice(`${participant(next).name} is now driving the agent.`);
+  }
 
   const textarea = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -167,6 +222,10 @@ export function DevelopmentWorkspace() {
     text: string,
     files: { type: "file"; mediaType: string; url: string; filename?: string }[],
   ) {
+    if (!canInstruct(actor, driver, false)) {
+      setNotice(`${participant(driver).name} is driving. Request control to send instructions.`);
+      return;
+    }
     if (chat.send(text, files, mode)) setInput("");
   }
   async function copy(text: string, id: string) {
@@ -229,6 +288,40 @@ export function DevelopmentWorkspace() {
               </DropdownMenu>
             </div>
           </div>
+          <div className="presence-bar" aria-label="People in this session">
+            <div className="presence-stack">
+              {participants.map((p) => (
+                <span key={p.id} className="presence-item">
+                  <Avatar id={p.id} />
+                  {p.id === driver && <span className="presence-driver-dot" aria-hidden />}
+                </span>
+              ))}
+            </div>
+            <span className="presence-count">{participants.length} in session</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="ghost" className="ml-auto h-6 gap-1.5 px-2 text-[10px]">
+                  <Avatar id={actor} size="sm" />
+                  Acting as {participant(actor).name}
+                  <ChevronDown className="size-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                {participants.map((p) => (
+                  <DropdownMenuItem key={p.id} onClick={() => setActor(p.id)}>
+                    <Avatar id={p.id} size="sm" />
+                    <span className="flex flex-col">
+                      <span>{p.name}</span>
+                      <span className="text-[10px] text-muted-foreground">
+                        {p.id === driver ? "Driving" : `Viewing ${p.focus}`}
+                      </span>
+                    </span>
+                    {p.id === actor && <Check className="ml-auto" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
           <div className="chat-runbar">
             <span className={busy ? "run-indicator running" : "run-indicator"} />
             <span>
@@ -269,6 +362,12 @@ export function DevelopmentWorkspace() {
                     </div>
                   )}
                   <MessageContent>
+                  {message.role === "user" && authors[message.id] && (
+                    <div className="author-label">
+                      <Avatar id={authors[message.id]} size="sm" />
+                      {participant(authors[message.id]).name}
+                    </div>
+                  )}
                     {message.parts.map((part, index) => {
                       if (part.type === "text")
                         return (
@@ -436,6 +535,57 @@ export function DevelopmentWorkspace() {
             <ConversationScrollButton aria-label="Scroll to latest message" />
           </Conversation>
           <div className="composer-wrap">
+            <div className="control-strip" role="status">
+              <Avatar id={driver} size="sm" />
+              <span>
+                {isDriver ? "You are driving the agent" : `${participant(driver).name} is driving`}
+              </span>
+              {typing && typing !== driver && (
+                <span className="typing-note">
+                  <span className="typing-dots" aria-hidden>
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  {participant(typing).name.split(" ")[0]} is drafting
+                </span>
+              )}
+              {isDriver ? (
+                requests.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto h-6 px-2 text-[10px]"
+                    disabled={busy}
+                    onClick={() => takeControl(requests[0])}
+                  >
+                    Hand to {participant(requests[0]).name.split(" ")[0]}
+                  </Button>
+                )
+              ) : requests.includes(actor) ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-6 px-2 text-[10px]"
+                  disabled={busy}
+                  onClick={() => takeControl(actor)}
+                >
+                  Take control
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-auto h-6 px-2 text-[10px]"
+                  onClick={() => {
+                    setRequests((r) => [...r, actor]);
+                    setNotice(`Control requested from ${participant(driver).name}.`);
+                  }}
+                >
+                  Request control
+                </Button>
+              )}
+            </div>
             <div className="chat-suggestions">
               {chat.suggestions.slice(0, 2).map((suggestion) => (
                 <Button
@@ -463,7 +613,11 @@ export function DevelopmentWorkspace() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
-                  busy ? "Draft your next instruction…" : "Give the factory its next instruction…"
+                  !isDriver
+                    ? `Draft a note — ${participant(driver).name} is driving…`
+                    : busy
+                      ? "Draft your next instruction…"
+                      : "Give the factory its next instruction…"
                 }
                 aria-label="Message Forma"
               />
@@ -506,7 +660,7 @@ export function DevelopmentWorkspace() {
                 </div>
                 <PromptInputSubmit
                   status={busy ? "streaming" : "ready"}
-                  disabled={!busy && !input.trim()}
+                  disabled={!busy && (!input.trim() || !isDriver)}
                   onStop={chat.stop}
                   className="rounded-md"
                   title={busy ? "Stop" : "Send message"}

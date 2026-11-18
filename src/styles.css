@@ -1879,3 +1879,22 @@ body::after {
   .workspace .chat-panel, .workspace .preview-panel { grid-column: 1; grid-row: 1; }
   .rail-action:has(.mobile-toggle), .mobile-toggle-button { display: inline-flex; }
 }
+
+/* Shared session presence */
+.presence-bar { display: flex; align-items: center; gap: 0.5rem; padding: 0.35rem 0.75rem; border-bottom: 1px solid var(--border); background: var(--card); }
+.presence-stack { display: flex; }
+.presence-item { position: relative; margin-left: -6px; }
+.presence-item:first-child { margin-left: 0; }
+.presence-avatar { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 4px; font: 600 8px/1 var(--font-mono, monospace); letter-spacing: 0.04em; color: oklch(0.16 0.02 var(--avatar-hue)); background: oklch(0.78 0.13 var(--avatar-hue)); box-shadow: 0 0 0 2px var(--card); flex-shrink: 0; }
+.presence-avatar-sm { width: 16px; height: 16px; font-size: 7px; box-shadow: none; }
+.presence-driver-dot { position: absolute; right: -2px; bottom: -2px; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 2px var(--card), 0 0 6px var(--primary); }
+.presence-count { font: 500 9px/1 var(--font-mono, monospace); text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-foreground); }
+.author-label { display: flex; align-items: center; gap: 0.35rem; font: 500 9px/1 var(--font-mono, monospace); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted-foreground); margin-bottom: 0.25rem; }
+.control-strip { display: flex; align-items: center; gap: 0.5rem; min-height: 26px; margin-bottom: 0.4rem; font: 500 10px/1.2 var(--font-mono, monospace); color: var(--muted-foreground); }
+.typing-note { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--foreground); opacity: 0.8; }
+.typing-dots { display: inline-flex; gap: 2px; }
+.typing-dots i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; animation: typing-bounce 1s infinite ease-in-out; }
+.typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce { 0%, 80%, 100% { opacity: 0.3; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }
+@media (prefers-reduced-motion: reduce) { .typing-dots i { animation: none; } }
