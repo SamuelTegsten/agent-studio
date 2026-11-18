@@ -12,7 +12,6 @@ import {
   ExternalLink,
   Files,
   GitBranch,
-  History,
   LayoutPanelLeft,
   LockKeyhole,
   Maximize2,
@@ -25,7 +24,6 @@ import {
   Terminal,
   Plus,
   RotateCcw,
-  Settings2,
   Smartphone,
   Square,
   ThumbsDown,
@@ -153,9 +151,7 @@ export function DevelopmentWorkspace() {
   const [artifact, setArtifact] = useState<ArtifactKind>("api");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [showPreview, setShowPreview] = useState(false);
-  const [dialog, setDialog] = useState<"files" | "history" | "settings" | "share" | "reset" | null>(
-    null,
-  );
+  const [dialog, setDialog] = useState<"reset" | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [previewKey, setPreviewKey] = useState(0);
@@ -192,93 +188,6 @@ export function DevelopmentWorkspace() {
   return (
     <TooltipProvider delayDuration={250}>
       <main className={`workspace ${showPreview ? "show-preview" : ""}`}>
-        <aside className="rail" aria-label="Workspace navigation">
-          <BrandMark />
-          <div className="rail-divider" />
-          <IconButton
-            label="Conversation"
-            active={!showPreview}
-            onClick={() => setShowPreview(false)}
-          >
-            <MessageSquare />
-          </IconButton>
-          <IconButton
-            label="Project preview"
-            active={showPreview}
-            onClick={() => {
-              setShowPreview(true);
-              setView("infrastructure");
-            }}
-          >
-            <LayoutPanelLeft />
-          </IconButton>
-          <IconButton label="Project files" onClick={() => setDialog("files")}>
-            <Files />
-          </IconButton>
-          <IconButton label="Version history" onClick={() => setDialog("history")}>
-            <History />
-          </IconButton>
-          <div className="mt-auto" />
-          <IconButton label="Workspace settings" onClick={() => setDialog("settings")}>
-            <Settings2 />
-          </IconButton>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                className="rounded-full bg-accent text-xs text-primary"
-                onClick={() => setDialog("settings")}
-                aria-label="Samuel’s workspace"
-              >
-                ST
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Samuel’s workspace</TooltipContent>
-          </Tooltip>
-        </aside>
-        <header className="workspace-header">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="project-icon">
-              <LayoutPanelLeft className="size-4" />
-            </span>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-[13px] font-semibold">Dispatch / Factory</h1>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-xs" aria-label="Project menu">
-                      <ChevronDown className="size-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start">
-                    <DropdownMenuItem onClick={() => setDialog("files")}>
-                      Project files
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setDialog("reset")}>
-                      Reset conversation
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              <p className="text-[10px] text-muted-foreground">
-                FACTORY / 01 <span className="mx-1">/</span> Software assembly line
-              </p>
-            </div>
-            <span className="header-secondary ml-3 flex items-center gap-1.5 border-l pl-4 text-[10px] text-muted-foreground">
-              <LockKeyhole className="size-3" /> Private
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="header-secondary flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="status-dot" /> SESSION / LOCAL
-            </span>
-            <Button size="sm" onClick={() => setDialog("share")} className="gap-2 text-xs">
-              <ArrowUpRight className="size-3.5" />
-              Share
-            </Button>
-          </div>
-        </header>
         <section className="chat-panel" aria-label="Development chat">
           <div className="panel-heading">
             <div className="flex items-center gap-2">
@@ -287,6 +196,9 @@ export function DevelopmentWorkspace() {
               <span className="session-pill">Frontend demo</span>
             </div>
             <div className="flex gap-1">
+              <IconButton label="Show preview" onClick={() => setShowPreview(true)}>
+                <LayoutPanelLeft className="mobile-toggle" />
+              </IconButton>
               <IconButton label="Replay example conversation" onClick={chat.replay}>
                 <Play />
               </IconButton>
@@ -621,6 +533,15 @@ export function DevelopmentWorkspace() {
         </section>
         <section className="preview-panel" aria-label="Project preview">
           <div className="preview-toolbar">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="mobile-toggle-button"
+              aria-label="Back to chat"
+              onClick={() => setShowPreview(false)}
+            >
+              <MessageSquare />
+            </Button>
             <div className="primary-preview-tabs" role="tablist" aria-label="Preview sections">
               {availableSections(projectCapabilities.hasFrontend).map((section) => (
                 <Button
@@ -727,117 +648,12 @@ export function DevelopmentWorkspace() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>
-                {dialog === "files"
-                  ? "Project files"
-                  : dialog === "history"
-                    ? "Version history"
-                    : dialog === "share"
-                      ? "Share Dispatch / Factory"
-                      : dialog === "reset"
-                        ? "Reset this conversation?"
-                        : "Workspace settings"}
+                Reset this conversation?
               </DialogTitle>
               <DialogDescription>
-                {dialog === "reset"
-                  ? "Your session messages will be removed. The original sample conversation will be restored."
-                  : dialog === "share"
-                    ? "Export this session or copy the current workspace link."
-                    : "Dispatch / Factory · Frontend demo"}
+                Your session messages will be removed. The original sample conversation will be restored.
               </DialogDescription>
             </DialogHeader>
-            {dialog === "files" && (
-              <div className="space-y-1">
-                {[
-                  "src/components/workspace/artifact-preview.tsx",
-                  "src/styles.css",
-                  "AGENT.md",
-                  "CLAUDE.md",
-                ].map((file) => (
-                  <div
-                    className="flex items-center gap-2 rounded-md bg-muted px-3 py-3 text-xs"
-                    key={file}
-                  >
-                    <Files className="size-4 shrink-0 text-muted-foreground" />
-                    <span className="break-all">{file}</span>
-                  </div>
-                ))}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setDialog(null);
-                    setView("infrastructure");
-                    setShowPreview(true);
-                  }}
-                >
-                  <Code2 />
-                  View sample code
-                </Button>
-              </div>
-            )}
-            {dialog === "history" && (
-              <div className="flex gap-3 rounded-md border p-4">
-                <Check className="size-4 text-success" />
-                <div>
-                  <p className="text-sm font-medium">Version 1 — Full-stack assembly / 0042</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Initial sample · 5 sample artifacts
-                  </p>
-                  <Button
-                    variant="link"
-                    size="sm"
-                    className="px-0"
-                    onClick={() => {
-                      setDialog(null);
-                      setView("infrastructure");
-                      setShowPreview(true);
-                    }}
-                  >
-                    Open preview
-                    <ArrowRight />
-                  </Button>
-                </div>
-              </div>
-            )}
-            {dialog === "settings" && (
-              <dl className="space-y-4 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Workspace</dt>
-                  <dd>Personal</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Conversation</dt>
-                  <dd>Single session</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">History</dt>
-                  <dd>Resets on refresh</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Agent connection</dt>
-                  <dd>Demo only</dd>
-                </div>
-              </dl>
-            )}
-            {dialog === "share" && (
-              <div className="flex flex-col gap-3">
-                <Button variant="outline" onClick={() => copy(window.location.href, "link")}>
-                  {copied === "link" ? <Check /> : <Copy />}
-                  {copied === "link" ? "Link copied" : "Copy workspace link"}
-                </Button>
-                <ConversationDownload
-                  messages={messages}
-                  filename="factory-conversation.md"
-                  variant="outline"
-                >
-                  <ArrowDownToLine />
-                  Export conversation
-                </ConversationDownload>
-                <p className="text-xs text-muted-foreground">
-                  The link opens the demo. Session messages are not shared or saved.
-                </p>
-              </div>
-            )}
             {dialog === "reset" && (
               <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setDialog(null)}>

@@ -1865,3 +1865,17 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+
+/* Embeddable layout: no app rail or header; chat + preview only */
+.workspace { grid-template-columns: minmax(360px, 420px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+.workspace .chat-panel, .workspace .preview-panel { grid-row: 1; }
+.workspace .chat-panel { grid-column: 1; }
+.workspace .preview-panel { grid-column: 2; }
+.rail-action:has(.mobile-toggle), .mobile-toggle-button { display: none; }
+@media (min-width: 1500px) { .workspace { grid-template-columns: 460px minmax(0, 1fr); } }
+@media (max-width: 1050px) { .workspace { grid-template-columns: 360px minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); }
+  .workspace .chat-panel, .workspace .preview-panel { grid-column: 1; grid-row: 1; }
+  .rail-action:has(.mobile-toggle), .mobile-toggle-button { display: inline-flex; }
+}

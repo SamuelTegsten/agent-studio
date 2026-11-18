@@ -2,6 +2,10 @@
 
 ## Start here
 
+**Upgrade / embedding plan:** see [docs/UPGRADE_PLAN.md](docs/UPGRADE_PLAN.md) for what to import, how to mount it in a host project, and the order to replace simulation with real behavior.
+
+The workspace has no app navbar or sidebar; the host project provides navigation.
+
 Read `AGENTS.md` for repository/platform rules and `AGENT.md` for the full implementation map. Do not duplicate or override the platform-managed block.
 
 This is a React 19 + TanStack Start/Router + Tailwind CSS v4 frontend. Bun is the package manager. Shared UI uses shadcn/Radix; chat uses installed AI Elements and the AI SDK `UIMessage` shape. It is not a Next.js app and has no `App.tsx` switcher.

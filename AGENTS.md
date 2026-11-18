@@ -47,3 +47,4 @@ use the editor.
 - Default the preview to Infrastructure and expose Frontend only for projects with UI; use the diff library on before/after fixtures so changes and proposed source stay consistent.
 - Derive the expanded project explorer from a complete sample file manifest, with per-file revisions and optional artifact links; this keeps unchanged files browsable and changed-file counters aligned with the selected diff.
 - Keep task reviews in an ephemeral revision model with an independent AI Elements conversation using the shared demo scheduler; approval applies only to the latest revision and merge is explicitly simulated, preventing real repository claims.
+- Ship the workspace as an embeddable chat + preview surface without app navigation chrome; host projects own navigation, see docs/UPGRADE_PLAN.md.
