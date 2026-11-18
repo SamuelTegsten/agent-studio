@@ -80,8 +80,10 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BrandMark } from "./brand";
-import { ArtifactPreview, ArtifactSelector } from "./artifact-preview";
-import { artifacts, artifactCode, type ArtifactKind } from "@/lib/artifacts";
+import { ArtifactPreview } from "./artifact-preview";
+import { InfrastructurePreview } from "./infrastructure-preview";
+import { availableSections, projectCapabilities, type PreviewSection } from "@/lib/infrastructure";
+import { type ArtifactKind } from "@/lib/artifacts";
 import { toolTitles } from "@/lib/chat-demo";
 import { useDemoConversation } from "@/hooks/use-demo-conversation";
 
@@ -146,10 +148,8 @@ export function DevelopmentWorkspace() {
   const [input, setInput] = useState("");
 
   const [mode, setMode] = useState<"build" | "plan">("build");
-  const [view, setView] = useState<"preview" | "code">("preview");
-  const [artifact, setArtifact] = useState<ArtifactKind>("web");
-  const activeArtifact = artifacts.find((item) => item.id === artifact) ?? artifacts[0];
-  const sampleCode = artifactCode[artifact];
+  const [view, setView] = useState<PreviewSection>("infrastructure");
+  const [artifact, setArtifact] = useState<ArtifactKind>("api");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [showPreview, setShowPreview] = useState(false);
   const [dialog, setDialog] = useState<"files" | "history" | "settings" | "share" | "reset" | null>(
@@ -205,7 +205,7 @@ export function DevelopmentWorkspace() {
             active={showPreview}
             onClick={() => {
               setShowPreview(true);
-              setView("preview");
+              setView("infrastructure");
             }}
           >
             <LayoutPanelLeft />
@@ -428,7 +428,7 @@ export function DevelopmentWorkspace() {
                             className="h-6 gap-1 px-1 text-[10px] text-primary"
                             onClick={() => {
                               setShowPreview(true);
-                              setView("preview");
+                              setView("infrastructure");
                             }}
                           >
                             View preview
@@ -500,7 +500,7 @@ export function DevelopmentWorkspace() {
                   className="artifact-followup"
                   onClick={() => {
                     if (chat.recommendedArtifact) setArtifact(chat.recommendedArtifact);
-                    setView("preview");
+                    setView("infrastructure");
                     setShowPreview(true);
                   }}
                 >
@@ -610,115 +610,89 @@ export function DevelopmentWorkspace() {
         </section>
         <section className="preview-panel" aria-label="Project preview">
           <div className="preview-toolbar">
-            <div className="segmented">
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-7 gap-1.5 px-2.5 text-[11px] text-muted-foreground ${view === "preview" ? "selected" : ""}`}
-                onClick={() => setView("preview")}
-              >
-                <Monitor className="size-3.5" />
-                Preview
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-7 gap-1.5 px-2.5 text-[11px] text-muted-foreground ${view === "code" ? "selected" : ""}`}
-                onClick={() => setView("code")}
-              >
-                <Code2 className="size-3.5" />
-                Code
-              </Button>
+            <div className="primary-preview-tabs" role="tablist" aria-label="Preview sections">
+              {availableSections(projectCapabilities.hasFrontend).map((section) => (
+                <Button
+                  key={section}
+                  role="tab"
+                  aria-selected={view === section}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setView(section)}
+                  className={view === section ? "selected" : ""}
+                >
+                  {section === "infrastructure" ? (
+                    <Code2 className="size-3.5" />
+                  ) : (
+                    <Monitor className="size-3.5" />
+                  )}
+                  {section === "infrastructure" ? "Infrastructure" : "Frontend"}
+                </Button>
+              ))}
             </div>
-            <div className="flex items-center gap-0.5">
-              <span className="artifact-kind-label mr-2">{activeArtifact.kind}</span>
-              <IconButton
-                label="Desktop preview"
-                active={device === "desktop"}
-                onClick={() => setDevice("desktop")}
-              >
-                <Monitor />
-              </IconButton>
-              <IconButton
-                label="Mobile preview"
-                active={device === "mobile"}
-                onClick={() => setDevice("mobile")}
-              >
-                <Smartphone />
-              </IconButton>
-              <div className="mx-2 h-4 border-l" />
+            <div className="flex items-center gap-1">
+              {view === "frontend" && (
+                <>
+                  <IconButton
+                    label="Desktop preview"
+                    active={device === "desktop"}
+                    onClick={() => setDevice("desktop")}
+                  >
+                    <Monitor />
+                  </IconButton>
+                  <IconButton
+                    label="Mobile preview"
+                    active={device === "mobile"}
+                    onClick={() => setDevice("mobile")}
+                  >
+                    <Smartphone />
+                  </IconButton>
+                </>
+              )}
               <IconButton label="Fullscreen preview" onClick={fullscreen}>
                 <Maximize2 />
               </IconButton>
             </div>
           </div>
-          <ArtifactSelector
-            value={artifact}
-            onChange={(kind) => {
-              setArtifact(kind);
-              setView("preview");
-            }}
-          />
           <div
             ref={previewRef}
-            className={`browser-frame ${device === "mobile" && view === "preview" && artifact === "web" ? "mobile-frame" : ""}`}
+            className={`browser-frame ${device === "mobile" && view === "frontend" ? "mobile-frame" : ""}`}
           >
-            <div className="browser-bar">
-              <div className="hidden gap-1.5 xl:flex">
-                <span className="browser-dot" />
-                <span className="browser-dot" />
-                <span className="browser-dot" />
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                aria-label="Refresh preview"
-                onClick={() => {
-                  setPreviewKey((k) => k + 1);
-                  setNotice("Preview refreshed.");
-                }}
-              >
-                <RotateCcw className="size-3 text-muted-foreground" />
-              </Button>
-              <div className="address-bar">
-                <LockKeyhole className="size-2.5" />
-                {activeArtifact.address}
-              </div>
-              <IconButton label="Expand preview" onClick={fullscreen}>
-                <ExternalLink />
-              </IconButton>
-            </div>
-            {view === "preview" ? (
-              <ArtifactPreview key={`${artifact}-${previewKey}`} kind={artifact} />
+            {view === "infrastructure" ? (
+              <InfrastructurePreview artifact={artifact} onSelect={setArtifact} />
             ) : (
-              <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex items-center justify-between border-b px-5 py-3 text-xs">
-                  <span className="flex items-center gap-2">
-                    <Code2 className="size-3 text-primary" />
-                    {activeArtifact.file}
-                    <span className="session-pill">Sample</span>
-                  </span>
-                  <IconButton
-                    label={copied === "code" ? "Code copied" : "Copy sample code"}
-                    onClick={() => copy(sampleCode, "code")}
+              <>
+                <div className="browser-bar">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="Refresh preview"
+                    onClick={() => setPreviewKey((key) => key + 1)}
                   >
-                    {copied === "code" ? <Check /> : <Copy />}
+                    <RotateCcw className="size-3" />
+                  </Button>
+                  <div className="address-bar">
+                    <LockKeyhole className="size-2.5" />
+                    dispatch.local / overview
+                  </div>
+                  <IconButton label="Expand preview" onClick={fullscreen}>
+                    <ExternalLink />
                   </IconButton>
                 </div>
-                <pre className="code-surface">
-                  <code>{sampleCode}</code>
-                </pre>
-              </div>
+                <ArtifactPreview key={previewKey} kind="web" />
+              </>
             )}
           </div>
           <div className="preview-footnote">
             <span className="flex items-center gap-1.5">
               <span className="status-dot" />
-              FIXTURE / READY
+              {view === "infrastructure"
+                ? "INFRASTRUCTURE / SAMPLE CHANGES"
+                : "FRONTEND / LOCAL PREVIEW"}
             </span>
             <span className="flex items-center gap-1.5">
               <GitBranch className="size-3" />
-              main <span className="mx-1">·</span> v1
+              main · v1
             </span>
           </div>
         </section>
@@ -770,7 +744,7 @@ export function DevelopmentWorkspace() {
                   size="sm"
                   onClick={() => {
                     setDialog(null);
-                    setView("code");
+                    setView("infrastructure");
                     setShowPreview(true);
                   }}
                 >
@@ -793,7 +767,7 @@ export function DevelopmentWorkspace() {
                     className="px-0"
                     onClick={() => {
                       setDialog(null);
-                      setView("preview");
+                      setView("infrastructure");
                       setShowPreview(true);
                     }}
                   >

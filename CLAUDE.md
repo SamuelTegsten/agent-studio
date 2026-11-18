@@ -38,7 +38,7 @@ The development server is platform-supervised on port 8080. Source edits refresh
 
 - Chat appends real input, indicates pending state, supports cancellation, and returns an honest demo response.
 - Attachment names appear and can be removed; files are not sent remotely.
-- Preview and code tabs work, the device control changes framing, and refresh does not reset chat.
+- Infrastructure defaults to Changes, Source shows the proposed revision, and Frontend renders UI with device controls.
 - Tool disclosures start closed and open with keyboard or pointer.
 - Clipboard/export and reset actions have actual outcomes.
 - Desktop/mobile layouts remain readable and do not overflow.
@@ -49,6 +49,6 @@ When extending architecture, update `AGENTS.md` with one concise rule and why, a
 
 ## Adaptive software outputs
 
-`src/lib/artifacts.ts` defines the typed artifact catalog, per-kind sample source, job fixtures, and deterministic API simulator. `src/components/workspace/artifact-preview.tsx` owns the renderer registry for web, API, data, terminal, and document outputs. Selecting an artifact changes the renderer, address, kind, and source together. Add new kinds through the catalog, source map, and renderer registry, not ad hoc page switches.
+The primary preview defaults to Infrastructure. `src/lib/infrastructure.ts` defines before/after fixtures, diff calculations, and section availability. `src/components/workspace/infrastructure-preview.tsx` shows changed files, highlighted unified diffs, and proposed source. Frontend is available only when the project has UI and renders the web artifact. The other typed renderers remain available for future inspectors; they are not primary sections.
 
 API Send simulates GET /v1/jobs and /v1/health, returning 404 for unknown paths and 405 for unsupported methods. Data supports local filtering and schema inspection. Terminal accepts only fixture commands (help, status, jobs, clear); never execute user commands on the host. Documents render a local blueprint. Device framing applies only to the web output. All execution remains simulated; the product may build full-stack software in the future, but this delivery implements only the frontend.

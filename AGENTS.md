@@ -43,3 +43,5 @@ use the editor.
 - Define output kinds in a typed catalog and renderer registry, with matching per-kind source previews; this allows software artifacts beyond browser pages without coupling their UI state.
 
 - Keep simulated conversation timing and cancellation in `use-demo-conversation`, with typed scenarios in `chat-demo.ts`; one scheduler preserves partial output and prevents replay/send races.
+
+- Default the preview to Infrastructure and expose Frontend only for projects with UI; use the diff library on before/after fixtures so changes and proposed source stay consistent.

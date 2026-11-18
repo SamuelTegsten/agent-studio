@@ -48,3 +48,7 @@ Backend work requires explicit scope expansion. Enable Lovable Cloud before pers
 `src/lib/artifacts.ts` defines the typed artifact catalog, per-kind sample source, job fixtures, and deterministic API simulator. `src/components/workspace/artifact-preview.tsx` owns the renderer registry for web, API, data, terminal, and document outputs. Selecting an artifact changes the renderer, address, kind, and source together. Add new kinds through the catalog, source map, and renderer registry, not ad hoc page switches.
 
 API Send simulates GET /v1/jobs and /v1/health, returning 404 for unknown paths and 405 for unsupported methods. Data supports local filtering and schema inspection. Terminal accepts only fixture commands (help, status, jobs, clear); never execute user commands on the host. Documents render a local blueprint. Device framing applies only to the web output. All execution remains simulated; the product may build full-stack software in the future, but this delivery implements only the frontend.
+
+## Infrastructure-first preview
+
+The primary preview sections are Infrastructure (default) and Frontend (conditional on `projectCapabilities.hasFrontend`). `infrastructure.ts` owns sample before/after code, diff computation using the diff package, change counts, and section availability. `infrastructure-preview.tsx` renders changed files, unified additions/removals, line numbers, and proposed source. Diffs are labeled sample changes and are not actual filesystem edits. Frontend renders the web artifact only; device controls belong to that section.
