@@ -11,6 +11,28 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("conversation lifecycle", () => {
+  it("applies review alterations only after a complete response, never after cancellation", () => {
+    const completed = vi.fn();
+    const { result } = renderHook(() =>
+      useDemoConversation({ initialMessages: [], onTurnComplete: completed }),
+    );
+    act(() => {
+      result.current.send("Add updated_at", [], "build");
+    });
+    act(() => {
+      vi.advanceTimersByTime(830);
+      result.current.stop();
+      vi.runAllTimers();
+    });
+    expect(completed).not.toHaveBeenCalled();
+    act(() => {
+      result.current.send("Add updated_at", [], "build");
+    });
+    act(() => {
+      vi.runAllTimers();
+    });
+    expect(completed).toHaveBeenCalledExactlyOnceWith("Add updated_at");
+  });
   it("appends input immediately and progressively reveals the response", () => {
     const { result } = renderHook(() => useDemoConversation());
     act(() => {

@@ -82,6 +82,7 @@ import { Shimmer } from "@/components/ai-elements/shimmer";
 import { BrandMark } from "./brand";
 import { ArtifactPreview } from "./artifact-preview";
 import { InfrastructurePreview } from "./infrastructure-preview";
+import { TaskReview } from "./task-review";
 import { availableSections, projectCapabilities, type PreviewSection } from "@/lib/infrastructure";
 import { type ArtifactKind } from "@/lib/artifacts";
 import { toolTitles } from "@/lib/chat-demo";
@@ -159,12 +160,13 @@ export function DevelopmentWorkspace() {
   const [feedback, setFeedback] = useState<Record<string, "up" | "down">>({});
   const [previewKey, setPreviewKey] = useState(0);
   const [notice, setNotice] = useState("");
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const textarea = useRef<HTMLTextAreaElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (!showPreview && !dialog && !busy) textarea.current?.focus();
-  }, [showPreview, dialog, busy]);
+    if (!showPreview && !dialog && !reviewOpen && !busy) textarea.current?.focus();
+  }, [showPreview, dialog, reviewOpen, busy]);
   function send(
     text: string,
     files: { type: "file"; mediaType: string; url: string; filename?: string }[],
@@ -434,6 +436,15 @@ export function DevelopmentWorkspace() {
                             View preview
                             <ArrowUpRight className="size-3" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 gap-1 px-1 text-[10px] text-primary"
+                            disabled={busy}
+                            onClick={() => setReviewOpen(true)}
+                          >
+                            Review changes <Files className="size-3" />
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -631,6 +642,16 @@ export function DevelopmentWorkspace() {
               ))}
             </div>
             <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="review-open-button"
+                disabled={busy}
+                onClick={() => setReviewOpen(true)}
+              >
+                <Files className="size-3.5" />
+                Review
+              </Button>
               {view === "frontend" && (
                 <>
                   <IconButton
@@ -696,6 +717,7 @@ export function DevelopmentWorkspace() {
             </span>
           </div>
         </section>
+        <TaskReview open={reviewOpen} onOpenChange={setReviewOpen} taskBusy={busy} />
         <Dialog
           open={dialog !== null}
           onOpenChange={(open) => {

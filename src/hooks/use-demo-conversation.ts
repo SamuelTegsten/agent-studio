@@ -10,15 +10,19 @@ import {
 import type { ArtifactKind } from "@/lib/artifacts";
 
 type Phase = "idle" | "thinking" | "working" | "streaming";
-export function useDemoConversation() {
-  const [messages, setMessages] = useState<UIMessage[]>(initialMessages);
+type ConversationOptions = {
+  initialMessages?: UIMessage[];
+  suggestions?: string[];
+  responseFor?: typeof responseFor;
+  onTurnComplete?: (input: string) => void;
+};
+export function useDemoConversation(options: ConversationOptions = {}) {
+  const [messages, setMessages] = useState<UIMessage[]>(options.initialMessages ?? initialMessages);
   const [phase, setPhase] = useState<Phase>("idle");
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [suggestions, setSuggestions] = useState([
-    "Inspect the API",
-    "Review the job schema",
-    "Trace a worker failure",
-  ]);
+  const [suggestions, setSuggestions] = useState(
+    options.suggestions ?? ["Inspect the API", "Review the job schema", "Trace a worker failure"],
+  );
   const [replaying, setReplaying] = useState(false);
   const [replayStep, setReplayStep] = useState(0);
   const [completed, setCompleted] = useState(false);
@@ -75,6 +79,7 @@ export function useDemoConversation() {
         setActiveId(null);
         setSuggestions(scenario.suggestions);
         setRecommendedArtifact(scenario.artifact);
+        options.onTurnComplete?.(input);
         next?.();
         return;
       }
@@ -126,7 +131,11 @@ export function useDemoConversation() {
   }
   function send(input: string, files: FileUIPart[], mode: "build" | "plan") {
     if (running.current || playing.current || (!input.trim() && !files.length)) return false;
-    startTurn(input.trim() || "Review the attached files", responseFor(input, mode), files);
+    startTurn(
+      input.trim() || "Review the attached files",
+      (options.responseFor ?? responseFor)(input, mode),
+      files,
+    );
     return true;
   }
   function stop() {
@@ -161,12 +170,14 @@ export function useDemoConversation() {
   }
   function reset() {
     stop();
-    setMessages(initialMessages);
+    setMessages(options.initialMessages ?? initialMessages);
     setReplayStep(0);
     setCompleted(false);
     setStoppedIds([]);
     setRecommendedArtifact(null);
-    setSuggestions(["Inspect the API", "Review the job schema", "Trace a worker failure"]);
+    setSuggestions(
+      options.suggestions ?? ["Inspect the API", "Review the job schema", "Trace a worker failure"],
+    );
   }
   function replay() {
     if (running.current || playing.current) return;

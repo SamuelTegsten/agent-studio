@@ -51,4 +51,10 @@ API Send simulates GET /v1/jobs and /v1/health, returning 404 for unknown paths 
 
 ## Infrastructure-first preview
 
+## Task review gate
+
+`src/components/workspace/task-review.tsx` provides a separate review dialog with a visual report, per-file line graph, full diffs, and an independent AI Elements chat. `src/lib/task-review.ts` owns ephemeral revisions, review responses, supported sample alterations, and approval/merge guards. The shared demo conversation hook accepts initial messages, response selection, and a completion callback; stopping never applies a pending alteration. The supported request `Add updated_at to the schema` updates the review proposal and invalidates approval. Other requests receive honest discussion-only demo replies. Approval is revoked when a review message starts; merge requires idle work and approval of the current revision, asks for confirmation, then marks only the local sample merged into master. No Git operations or remote calls occur. The report and chat become switchable panels on small screens. Media uses `src/assets/dispatch-review.asset.json`.
+
+## Infrastructure-first preview details
+
 The primary preview sections are Infrastructure (default) and Frontend (conditional on `projectCapabilities.hasFrontend`). `infrastructure.ts` owns sample before/after code, diff computation using the diff package, change counts, section availability, and the complete sample file manifest/tree. `infrastructure-preview.tsx` renders the project root and all folders expanded initially, with selectable unchanged files, changed-file addition/deletion counters, unified diffs, line numbers, and proposed source. Folder expansion and file selection are ephemeral. Selecting a changed file opens Changes; unchanged files open Source. Diffs are labeled sample changes and are not actual filesystem edits. Frontend renders the web artifact only; device controls belong to that section.

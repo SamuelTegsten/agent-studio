@@ -49,6 +49,12 @@ When extending architecture, update `AGENTS.md` with one concise rule and why, a
 
 ## Adaptive software outputs
 
+## Task review
+
+The review dialog provides a visual explanation, revision-derived change graph, every changed-file diff, and an independent demo chat using `use-demo-conversation`. Its ephemeral model lives in `src/lib/task-review.ts`. The supported schema timestamp alteration updates the review proposal on completed output and invalidates approval. Arbitrary requests are discussion-only. Merge into master requires current-revision approval and idle work, and confirmation marks only the local sample merged; there is no repository integration.
+
+## Adaptive software output details
+
 The primary preview defaults to Infrastructure. `src/lib/infrastructure.ts` defines the complete sample project tree, per-file before/after fixtures, diff calculations, and section availability. `src/components/workspace/infrastructure-preview.tsx` shows the root and all folders expanded initially, highlights changed files with +/− counters, and opens their unified diffs on selection. Unchanged files open source; every folder can be collapsed. Frontend is available only when the project has UI and renders the web artifact. The other typed renderers remain available for future inspectors; they are not primary sections.
 
 API Send simulates GET /v1/jobs and /v1/health, returning 404 for unknown paths and 405 for unsupported methods. Data supports local filtering and schema inspection. Terminal accepts only fixture commands (help, status, jobs, clear); never execute user commands on the host. Documents render a local blueprint. Device framing applies only to the web output. All execution remains simulated; the product may build full-stack software in the future, but this delivery implements only the frontend.

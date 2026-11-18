@@ -12,3 +12,6 @@
 - [x] Make Infrastructure the default preview with highlighted source diffs.
 - [x] Separate optional Frontend rendering and verify both sections.
 - [x] Show the complete sample project tree with expanded folders, per-file diff counts, and selectable changes/source.
+- [x] Add a task review window with visual explanation, change graphs, and all file diffs.
+- [x] Add review chat, local sample alterations, and revision-aware demo merge into master.
+- [x] Verify review, follow-up changes, merge confirmation, and phone layout; update implementation guides.
