@@ -45,3 +45,4 @@ use the editor.
 - Keep simulated conversation timing and cancellation in `use-demo-conversation`, with typed scenarios in `chat-demo.ts`; one scheduler preserves partial output and prevents replay/send races.
 
 - Default the preview to Infrastructure and expose Frontend only for projects with UI; use the diff library on before/after fixtures so changes and proposed source stay consistent.
+- Derive the expanded project explorer from a complete sample file manifest, with per-file revisions and optional artifact links; this keeps unchanged files browsable and changed-file counters aligned with the selected diff.

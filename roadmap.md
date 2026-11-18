@@ -11,3 +11,4 @@
 
 - [x] Make Infrastructure the default preview with highlighted source diffs.
 - [x] Separate optional Frontend rendering and verify both sections.
+- [x] Show the complete sample project tree with expanded folders, per-file diff counts, and selectable changes/source.
